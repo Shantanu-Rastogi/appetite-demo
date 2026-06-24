@@ -31,19 +31,25 @@ function App() {
   const [componentsReady, setComponentsReady] = useState(false);
   const [dismissedHeaderAlerts, setDismissedHeaderAlerts] = useState([]);
 
+  const [missingComponents, setMissingComponents] = useState([]);
+
   useEffect(() => {
     // Polling to ensure Babel Standalone scripts have all downloaded and executed
     const checkInterval = setInterval(() => {
-      if (
-        window.LUMINA_MENU && 
-        window.StaffApp && 
-        window.KitchenApp && 
-        window.BarApp && 
-        window.OwnerDashboard && 
-        window.CustomerApp && 
-        window.WelcomeScreen && 
-        window.SuperApp
-      ) {
+      const required = [
+        'LUMINA_MENU', 
+        'StaffApp', 
+        'KitchenApp', 
+        'BarApp', 
+        'OwnerDashboard', 
+        'CustomerApp', 
+        'WelcomeScreen', 
+        'SuperApp'
+      ];
+      const missing = required.filter(k => !window[k]);
+      setMissingComponents(missing);
+
+      if (missing.length === 0) {
         setComponentsReady(true);
         setIsSuperAppReady(true);
         clearInterval(checkInterval);
@@ -52,6 +58,8 @@ function App() {
 
     return () => clearInterval(checkInterval);
   }, []);
+
+  // ... (keeping other state initializations) ...
 
   // GLOBAL STATE
   const [customers, setCustomers] = useState(INITIAL_CUSTOMERS);
@@ -140,12 +148,20 @@ function App() {
     StaffApp: !!window.StaffApp,
     KitchenApp: !!window.KitchenApp,
     BarApp: !!window.BarApp,
-    OwnerDashboard: !!window.OwnerDashboard
+    OwnerDashboard: !!window.OwnerDashboard,
+    CustomerApp: !!window.CustomerApp,
+    WelcomeScreen: !!window.WelcomeScreen,
+    SuperApp: !!window.SuperApp
   });
 
   if (!componentsReady) {
-    console.log("Required components or data not found yet, polling...");
-    return <div style={{ color: 'var(--text-main)', padding: '2rem', textAlign: 'center' }}>Loading Application...</div>;
+    console.log("Missing components:", missingComponents);
+    return (
+      <div style={{ color: 'var(--text-main)', padding: '2rem', textAlign: 'center' }}>
+        <h2>Loading Application...</h2>
+        <p>Waiting for: {missingComponents.join(', ')}</p>
+      </div>
+    );
   }
 
   return (
