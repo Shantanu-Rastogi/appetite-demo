@@ -27,30 +27,30 @@ function App() {
   // UPI Test Component removed
 
   const [viewMode, setViewMode] = useState('customer');
-  const [isSuperAppReady, setIsSuperAppReady] = useState(!!window.SuperApp);
+  const [isSuperAppReady, setIsSuperAppReady] = useState(false);
+  const [componentsReady, setComponentsReady] = useState(false);
   const [dismissedHeaderAlerts, setDismissedHeaderAlerts] = useState([]);
 
   useEffect(() => {
-    const handleReady = () => setIsSuperAppReady(true);
-    window.addEventListener('superAppReady', handleReady);
-    
-    // Polling fallback
+    // Polling to ensure Babel Standalone scripts have all downloaded and executed
     const checkInterval = setInterval(() => {
-      if (window.SuperApp) {
+      if (
+        window.LUMINA_MENU && 
+        window.StaffApp && 
+        window.KitchenApp && 
+        window.BarApp && 
+        window.OwnerDashboard && 
+        window.CustomerApp && 
+        window.WelcomeScreen && 
+        window.SuperApp
+      ) {
+        setComponentsReady(true);
         setIsSuperAppReady(true);
         clearInterval(checkInterval);
       }
-    }, 500);
+    }, 250);
 
-    if (window.SuperApp) {
-      setIsSuperAppReady(true);
-      clearInterval(checkInterval);
-    }
-
-    return () => {
-      window.removeEventListener('superAppReady', handleReady);
-      clearInterval(checkInterval);
-    };
+    return () => clearInterval(checkInterval);
   }, []);
 
   // GLOBAL STATE
@@ -143,8 +143,8 @@ function App() {
     OwnerDashboard: !!window.OwnerDashboard
   });
 
-  if (!window.LUMINA_MENU || !window.StaffApp || !window.KitchenApp || !window.BarApp || !window.OwnerDashboard || !window.CustomerApp || !window.WelcomeScreen) {
-    console.log("Required components or data not found yet");
+  if (!componentsReady) {
+    console.log("Required components or data not found yet, polling...");
     return <div style={{ color: 'var(--text-main)', padding: '2rem', textAlign: 'center' }}>Loading Application...</div>;
   }
 
