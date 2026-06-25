@@ -92,24 +92,24 @@ function KitchenApp({ activeOrders, setActiveOrders, unavailableItems, setUnavai
             const baseTime = earliestFired || ticket.createdAt;
 
             return (
-              <div key={ticket.id} draggable onDragStart={(e) => e.dataTransfer.setData('ticketId', ticket.id)} className={`ticket-card fade-in ${(isSeverityActive && (now - baseTime)/1000 > 720) ? 'pulse-critical' : ''}`} style={{ border: '1px solid var(--glass-border)', borderTop: isSeverityActive ? `4px solid ${getSeverity(baseTime).color}` : '1px solid var(--glass-border)', cursor: 'grab', background: (isSeverityActive && (now - baseTime)/1000 > 720) ? 'rgba(239, 68, 68, 0.1)' : 'rgba(255,255,255,0.8)', borderRadius: '16px', padding: '1.25rem', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.06)', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                <div className="ticket-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ color: 'var(--text-main)', fontWeight: '800', fontSize: '1.1rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '150px' }} title={typeof ticket.table === 'string' ? ticket.table : `Table ${ticket.table}`}>
+              <div key={ticket.id} draggable onDragStart={(e) => e.dataTransfer.setData('ticketId', ticket.id)} className={`ticket-card fade-in ${(isSeverityActive && (now - baseTime)/1000 > 720) ? 'pulse-critical' : ''}`} style={{ borderTop: isSeverityActive ? `4px solid ${getSeverity(baseTime).color}` : '' }}>
+                <div className="ticket-header">
+                  <span className="ticket-title" title={typeof ticket.table === 'string' ? ticket.table : `Table ${ticket.table}`}>
                     {typeof ticket.table === 'string' ? ticket.table : `Table ${ticket.table}`}
                   </span>
-                  {isSeverityActive && <span className="status-badge" style={{ background: `${getSeverity(baseTime).color}1a`, color: getSeverity(baseTime).color, border: `1px solid ${getSeverity(baseTime).color}33`, padding: '0.25rem 0.5rem', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '700' }}>{getSeverity(baseTime).text}</span>}
+                  {isSeverityActive && <span className="status-badge" style={{ background: `${getSeverity(baseTime).color}1a`, color: getSeverity(baseTime).color, border: `1px solid ${getSeverity(baseTime).color}33` }}>{getSeverity(baseTime).text}</span>}
                 </div>
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontFamily: 'monospace' }}>{ticket.id}</span>
+                <div className="ticket-meta">
+                  <span className="ticket-id">{ticket.id}</span>
                   {isSeverityActive ? (
-                    <span style={{ fontWeight: '700', padding: '2px 6px', background: 'rgba(0,0,0,0.05)', borderRadius: '4px', color: getSeverity(baseTime).color, fontFamily: 'monospace', fontSize: '0.9rem' }}>
+                    <span className="ticket-wait-badge" style={{ color: getSeverity(baseTime).color }}>
                       {earliestFired ? 'Fired ' : 'Wait '}{formatTimer(baseTime)}
                     </span>
                   ) : (
-                    <span style={{ color: 'var(--primary)', fontWeight: '700', fontSize: '0.9rem' }}><i className="fa-solid fa-check"></i> Ready</span>
+                    <span style={{ color: 'var(--primary)', fontWeight: '700' }}><i className="fa-solid fa-check"></i> Ready</span>
                   )}
                 </div>
-                <div style={{ flex: 1, marginTop: '0.5rem', borderTop: '1px dashed var(--glass-border)', paddingTop: '0.5rem' }}>
+                <div style={{ flex: 1, marginTop: '0.25rem' }}>
                   {Object.values(validItems.reduce((acc, curr) => {
                     const key = `${curr.name}-${curr.status}-${curr.notes || ''}`;
                     if (!acc[key]) acc[key] = { ...curr, qty: 0, ids: [] };
@@ -117,21 +117,34 @@ function KitchenApp({ activeOrders, setActiveOrders, unavailableItems, setUnavai
                     acc[key].ids.push(curr.id);
                     return acc;
                   }, {})).map((item, idx) => (
-                    <div key={idx} className="ticket-item" style={{ marginBottom: '6px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', background: '#f9fafb', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                      <div style={{ display: 'flex', flexDirection: 'column' }}>
-                        <span style={{ fontSize: '0.95rem', color: 'var(--text-main)' }}><strong>{item.qty}x</strong> {item.name} <span style={{ fontSize: '0.75rem', background: 'rgba(16,185,129,0.1)', color: '#10b981', padding: '2px 6px', borderRadius: '4px', marginLeft: '0.5rem', fontWeight: 'bold' }}><i className="fa-solid fa-check"></i> Stock Deducted</span></span>
-                        {item.notes && <span style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '2px' }}>Note: {item.notes}</span>}
+                    <div key={idx} className="ticket-item">
+                      <div className="ticket-item-details">
+                        <span className="ticket-item-name">
+                          <span className="ticket-item-qty">{item.qty}x</span>{item.name}
+                          {item.stockDeducted && <span className="ticket-item-stock-badge"><i className="fa-solid fa-check"></i> Stock Deducted</span>}
+                        </span>
+                        {item.notes && <span className="ticket-item-note">Note: {item.notes}</span>}
                       </div>
-                      <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-                        <span style={{ fontSize: '0.75rem', color: item.status === 'cooking' ? '#f59e0b' : item.status === 'ready' ? '#10b981' : item.status === 'nc' ? '#6b7280' : 'var(--text-muted)', fontWeight: 'bold', textTransform: 'uppercase' }}>
+                      <div className="ticket-actions">
+                        <span className="ticket-status-text" style={{ color: item.status === 'cooking' ? '#f59e0b' : item.status === 'ready' ? '#10b981' : item.status === 'nc' ? '#6b7280' : 'var(--text-muted)' }}>
                           {item.status === 'cooking' ? 'Cooking' : item.status === 'ready' ? 'Ready' : item.status === 'nc' ? 'NC' : 'New'}
                         </span>
-                        {item.status !== 'ready' && item.status !== 'served' && (
-                          <button onClick={() => updateItemStatus(ticket.id, [item.ids[0]], 'ready')} style={{ background: 'var(--primary)', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: '4px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 'bold' }}>
-                            Done
+                        {item.status === 'new' && (
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <button className="btn-kds-action btn-kds-cook" onClick={() => updateItemStatus(ticket.id, item.ids, 'cooking')}>
+                              <i className="fa-solid fa-fire"></i> Cook
+                            </button>
+                            <button className="btn-kds-action btn-kds-done" onClick={() => updateItemStatus(ticket.id, item.ids, 'ready')}>
+                              <i className="fa-solid fa-check"></i> Done
+                            </button>
+                          </div>
+                        )}
+                        {item.status === 'cooking' && (
+                          <button className="btn-kds-action btn-kds-done" onClick={() => updateItemStatus(ticket.id, item.ids, 'ready')}>
+                            <i className="fa-solid fa-check"></i> Done
                           </button>
                         )}
-                        {item.status === 'ready' && <i className="fa-solid fa-check" style={{ color: '#10b981' }}></i>}
+                        {item.status === 'ready' && <i className="fa-solid fa-check" style={{ color: '#10b981', fontSize: '1.2rem' }}></i>}
                         {item.status === 'served' && <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}><i className="fa-solid fa-check-double"></i> Served</span>}
                       </div>
                     </div>

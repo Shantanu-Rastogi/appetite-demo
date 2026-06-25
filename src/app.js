@@ -24,34 +24,42 @@ function App() {
   const BarAppComponent = window.BarApp;
   const OwnerDashboardComponent = window.OwnerDashboard;
   const CustomerAppComponent = window.CustomerApp;
-  const UpiTestAppComponent = window.UpiTestApp;
+  // UPI Test Component removed
 
   const [viewMode, setViewMode] = useState('customer');
-  const [isSuperAppReady, setIsSuperAppReady] = useState(!!window.SuperApp);
+  const [isSuperAppReady, setIsSuperAppReady] = useState(false);
+  const [componentsReady, setComponentsReady] = useState(false);
   const [dismissedHeaderAlerts, setDismissedHeaderAlerts] = useState([]);
 
+  const [missingComponents, setMissingComponents] = useState([]);
+
   useEffect(() => {
-    const handleReady = () => setIsSuperAppReady(true);
-    window.addEventListener('superAppReady', handleReady);
-    
-    // Polling fallback
+    // Polling to ensure Babel Standalone scripts have all downloaded and executed
     const checkInterval = setInterval(() => {
-      if (window.SuperApp) {
+      const required = [
+        'LUMINA_MENU', 
+        'StaffApp', 
+        'KitchenApp', 
+        'BarApp', 
+        'OwnerDashboard', 
+        'CustomerApp', 
+        'WelcomeScreen', 
+        'SuperApp'
+      ];
+      const missing = required.filter(k => !window[k]);
+      setMissingComponents(missing);
+
+      if (missing.length === 0) {
+        setComponentsReady(true);
         setIsSuperAppReady(true);
         clearInterval(checkInterval);
       }
-    }, 500);
+    }, 250);
 
-    if (window.SuperApp) {
-      setIsSuperAppReady(true);
-      clearInterval(checkInterval);
-    }
-
-    return () => {
-      window.removeEventListener('superAppReady', handleReady);
-      clearInterval(checkInterval);
-    };
+    return () => clearInterval(checkInterval);
   }, []);
+
+  // ... (keeping other state initializations) ...
 
   // GLOBAL STATE
   const [customers, setCustomers] = useState(INITIAL_CUSTOMERS);
@@ -140,12 +148,20 @@ function App() {
     StaffApp: !!window.StaffApp,
     KitchenApp: !!window.KitchenApp,
     BarApp: !!window.BarApp,
-    OwnerDashboard: !!window.OwnerDashboard
+    OwnerDashboard: !!window.OwnerDashboard,
+    CustomerApp: !!window.CustomerApp,
+    WelcomeScreen: !!window.WelcomeScreen,
+    SuperApp: !!window.SuperApp
   });
 
-  if (!window.LUMINA_MENU || !window.StaffApp || !window.KitchenApp || !window.BarApp || !window.OwnerDashboard || !window.CustomerApp || !window.UpiTestApp || !window.WelcomeScreen) {
-    console.log("Required components or data not found yet");
-    return <div style={{ color: 'var(--text-main)', padding: '2rem', textAlign: 'center' }}>Loading Application...</div>;
+  if (!componentsReady) {
+    console.log("Missing components:", missingComponents);
+    return (
+      <div style={{ color: 'var(--text-main)', padding: '2rem', textAlign: 'center' }}>
+        <h2>Loading Application...</h2>
+        <p>Waiting for: {missingComponents.join(', ')}</p>
+      </div>
+    );
   }
 
   return (
@@ -168,9 +184,7 @@ function App() {
           <button className={`toggle-btn ${viewMode === 'bar' ? 'active' : ''}`} onClick={() => setViewMode('bar')}>
             <i className="fa-solid fa-martini-glass"></i> Bar (BDS)
           </button>
-          <button className={`toggle-btn ${viewMode === 'upi_test' ? 'active' : ''}`} onClick={() => setViewMode('upi_test')} style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: '1px solid #3b82f6' }}>
-            <i className="fa-brands fa-google-pay"></i> UPI Test
-          </button>
+
           <button className={`toggle-btn ${viewMode === 'owner' ? 'active' : ''}`} onClick={() => setViewMode('owner')}>
             <i className="fa-solid fa-laptop"></i> Owner Dash
           </button>
@@ -178,7 +192,7 @@ function App() {
       </header>
 
       <main className="main-content">
-        <div style={{ display: viewMode === 'super_app' ? 'block' : 'none', width: '100%' }}>
+        <div style={{ display: viewMode === 'super_app' ? 'flex' : 'none', width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
           {isSuperAppReady && window.SuperApp ? (
             <SuperAppComponent setViewMode={setViewMode} activeOrders={activeOrders} setActiveOrders={setActiveOrders} setServiceRequests={setServiceRequests} customers={customers} submittedTickets={custSubmittedTickets} setSubmittedTickets={setCustSubmittedTickets} activeBills={activeBills} ncOrders={ncOrders} />
           ) : (
@@ -186,7 +200,7 @@ function App() {
           )}
         </div>
 
-        <div style={{ display: viewMode === 'customer' ? 'block' : 'none', width: '100%' }}>
+        <div style={{ display: viewMode === 'customer' ? 'flex' : 'none', width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
           <CustomerAppComponent
             globalCustomers={customers} setGlobalCustomers={setCustomers} setGlobalOrders={setActiveOrders} globalOrders={activeOrders}
             setAnimatingItem={setAnimatingItem}
@@ -211,7 +225,7 @@ function App() {
           />
         </div>
 
-        <div style={{ display: viewMode === 'staff' ? 'block' : 'none', width: '100%' }}>
+        <div style={{ display: viewMode === 'staff' ? 'flex' : 'none', width: '100%', height: '100%', justifyContent: 'center', alignItems: 'center' }}>
           <div className="tablet-simulator">
             <div className="tablet-screen">
               <StaffAppComponent
@@ -255,13 +269,7 @@ function App() {
           />
         </div>
 
-        <div style={{ display: viewMode === 'upi_test' ? 'flex' : 'none', height: '100%', width: '100%' }}>
-          <div className="tablet-simulator">
-            <div className="tablet-screen">
-              <UpiTestAppComponent />
-            </div>
-          </div>
-        </div>
+
 
         <div style={{ display: viewMode === 'owner' ? 'flex' : 'none', height: '100%', width: '100%' }}>
           <OwnerDashboardComponent customers={customers} sales={sales} ncOrders={ncOrders} creditNotes={creditNotes} setCreditNotes={setCreditNotes} setGlobalSales={setSales} inventoryLedger={inventoryLedger} />

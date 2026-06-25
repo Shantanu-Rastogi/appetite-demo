@@ -392,7 +392,7 @@ function CustomerApp({
             ))}
           </div>
         )}
-        {currentScreen === 'welcome' && <h2>Welcome to Lumina</h2>}
+        {currentScreen === 'welcome' && <h2>Welcome to Appetite OS</h2>}
         {currentScreen === 'menu' && (
           <>
             <h2>Lumina (Table 7)</h2>
@@ -886,35 +886,15 @@ function CustomerApp({
               )}
 
               <div className="payment-options">
-                <label className={`payment-card ${selectedPayment === 'app' ? 'selected' : ''}`}>
-                  <input type="radio" name="payment" value="app" onChange={() => setSelectedPayment('app')} />
-                  <i className="fa-solid fa-qrcode"></i> Pay via UPI (PhonePe / GPay)
-                </label>
-                <label className={`payment-card ${selectedPayment === 'split' ? 'selected' : ''}`}>
-                  <input type="radio" name="payment" value="split" onChange={() => setSelectedPayment('split')} />
-                  <i className="fa-solid fa-money-bill-transfer"></i> Split Payment (Cash + UPI)
+                <label className={`payment-card ${selectedPayment === 'card' ? 'selected' : ''}`}>
+                  <input type="radio" name="payment" value="card" onChange={() => setSelectedPayment('card')} />
+                  <i className="fa-solid fa-credit-card"></i> Pay Online (Card / Netbanking)
                 </label>
                 <label className={`payment-card ${selectedPayment === 'waiter' ? 'selected' : ''}`}>
                   <input type="radio" name="payment" value="waiter" onChange={() => setSelectedPayment('waiter')} />
                   <i className="fa-solid fa-bell-concierge"></i> Pay to Waiter (Cash/Card)
                 </label>
               </div>
-
-              {selectedPayment === 'split' && (
-                <div className="fade-in" style={{ marginTop: '1rem', padding: '1.5rem', background: 'var(--bg-glass)', borderRadius: '12px', border: '1px solid var(--primary)' }}>
-                  <p style={{ marginBottom: '0.75rem', fontSize: '0.9rem', fontWeight: 'bold', color: 'var(--text-main)' }}>How much Cash will you leave on the table?</p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                    <span style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--primary)' }}>₹</span>
-                    <input type="number" placeholder="Cash Amount" value={splitCashAmount || ''} onChange={e => {
-                      const v = parseInt(e.target.value) || 0;
-                      setSplitCashAmount(Math.min(v, finalTotal));
-                    }} style={{ flex: 1, padding: '1rem', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'var(--bg-card)', color: 'var(--text-main)', fontSize: '1.2rem', fontWeight: 'bold' }} />
-                  </div>
-                  {splitCashAmount > 0 && splitCashAmount <= finalTotal && (
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>The remaining <strong style={{ color: 'var(--primary)' }}>₹{finalTotal - splitCashAmount}</strong> will be securely paid via UPI dynamically.</p>
-                  )}
-                </div>
-              )}
 
               <div className="loyalty-banner" style={{ marginTop: '2rem', background: 'rgba(16, 185, 129, 0.1)', padding: '1rem', borderRadius: '8px', border: '1px solid var(--primary)' }}>
                 <div style={{ display: 'flex', gap: '0.5rem', color: 'var(--primary)', fontWeight: 'bold', marginBottom: '0.5rem' }}>
@@ -936,46 +916,8 @@ function CustomerApp({
                 </div>
               )}
 
-              {selectedPayment === 'app' ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem' }}>
-                  <div style={{ textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-muted)' }}>Choose your UPI App:</div>
-                  
-                  <div style={{ marginBottom: '0.5rem' }}>
-                    <label style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.25rem', display: 'block' }}>Merchant UPI ID (for testing)</label>
-                    <input type="text" value={merchantVpa} onChange={(e) => setMerchantVpa(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)' }} placeholder="example@upi" />
-                  </div>
-
-                  <a href={window.upiHelper.getUpiLink('gpay', merchantVpa, `${finalTotal}.00`)} className="btn-primary" onClick={() => setTimeout(handlePay, 500)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: '#fff', color: '#333', border: '1px solid #ddd', textDecoration: 'none', width: '100%' }}>
-                    <i className="fa-brands fa-google" style={{ color: '#4285F4' }}></i> Pay via GPay
-                  </a>
-                  <a href={window.upiHelper.getUpiLink('phonepe', merchantVpa, `${finalTotal}.00`)} className="btn-primary" onClick={() => setTimeout(handlePay, 500)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: '#5f259f', textDecoration: 'none', width: '100%' }}>
-                    Pay via PhonePe
-                  </a>
-                  <a href={window.upiHelper.getUpiLink('paytm', merchantVpa, `${finalTotal}.00`)} className="btn-primary" onClick={() => setTimeout(handlePay, 500)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: '#00baf2', textDecoration: 'none', width: '100%' }}>
-                    Pay via Paytm
-                  </a>
-                  <a href={window.upiHelper.getUpiLink('upi', merchantVpa, `${finalTotal}.00`)} className="btn-primary" onClick={() => setTimeout(handlePay, 500)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: '#111', textDecoration: 'none', width: '100%' }}>
-                    <i className="fa-solid fa-qrcode"></i> Choose Other App
-                  </a>
-                </div>
-              ) : selectedPayment === 'split' ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '1rem', opacity: (splitCashAmount > 0 && splitCashAmount < finalTotal) ? 1 : 0.5, pointerEvents: (splitCashAmount > 0 && splitCashAmount < finalTotal) ? 'auto' : 'none' }}>
-                  
-                  <div style={{ marginBottom: '0.5rem' }}>
-                    <label style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '0.25rem', display: 'block' }}>Merchant UPI ID (for testing)</label>
-                    <input type="text" value={merchantVpa} onChange={(e) => setMerchantVpa(e.target.value)} style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', background: 'var(--bg-dark)', border: '1px solid var(--glass-border)', color: 'var(--text-main)' }} placeholder="example@upi" />
-                  </div>
-
-                  <a href={window.upiHelper.getUpiLink('gpay', merchantVpa, `${finalTotal - splitCashAmount}.00`)} className="btn-primary" onClick={() => setTimeout(handlePay, 500)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: '#fff', color: '#333', border: '1px solid #ddd', textDecoration: 'none', width: '100%' }}>
-                    <i className="fa-brands fa-google" style={{ color: '#4285F4' }}></i> Pay Balance via GPay
-                  </a>
-                  <a href={window.upiHelper.getUpiLink('upi', merchantVpa, `${finalTotal - splitCashAmount}.00`)} className="btn-primary" onClick={() => setTimeout(handlePay, 500)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', background: '#111', textDecoration: 'none', width: '100%' }}>
-                    <i className="fa-solid fa-qrcode"></i> Pay Balance via Other App
-                  </a>
-                </div>
-
-              ) : (
-                <button className="btn-primary" onClick={handlePay} disabled={!selectedPayment}>
+              {selectedPayment && (
+                <button className="btn-primary" onClick={handlePay} disabled={!selectedPayment} style={{ marginTop: '1rem', width: '100%' }}>
                   {selectedPayment === 'waiter' ? `Alert Waiter for Cash/Card` : `Pay ₹${finalTotal} Securely`}
                 </button>
               )}

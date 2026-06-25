@@ -234,35 +234,24 @@ function StaffApp({ isBarMode = false, onBackToKDS, activeOrders, setActiveOrder
     }
 
     setIsVerifyingUPI(true);
-    setUpiTickerText('Verifying Payment...');
+    setUpiTickerText('Processing Payment...');
     
     setTimeout(() => {
-      const amountStr = String(paymentObj.amount);
-      const isDeterministicFailure = false; // Disabled deterministic failure
-      
-      if (isDeterministicFailure) {
-        setUpiTickerText('Bank Server Down! NPCI Timeout.');
-        setTimeout(() => {
-          setIsVerifyingUPI(false);
-          alert('UPI Payment Failed: Bank Server Down (NPCI Timeout). Please try again or use cash.');
-        }, 1500);
-      } else {
-        setUpiTickerText('Payment Verified!');
-        setTimeout(() => {
-          setIsVerifyingUPI(false);
-          setPendingPayments(prev => Array.isArray(prev) ? prev.filter(p => p !== paymentObj) : []);
-          setGlobalSales(prev => {
-            if (!prev) return { totalRevenue: parseFloat(paymentObj.amount) || 0, ordersToday: 1 };
-            return { ...prev, totalRevenue: (prev.totalRevenue || 0) + (parseFloat(paymentObj.amount) || 0), ordersToday: (prev.ordersToday || 0) + 1 };
-          });
-          setGlobalCustomers(prev => {
-            if (!prev) return [];
-            return prev.map(c => c.phone === paymentObj.customerPhone ? { ...c, points: (c.points || 0) + ((parseFloat(paymentObj.cashbackValue) || 0) * 10), visits: (c.visits || 0) + 1, lastVisit: 'Just now' } : c);
-          });
-          if (selectedTable === paymentObj.table) setSelectedTable(null);
-        }, 1500);
-      }
-    }, 2000); // 2-second UPI delay
+      setUpiTickerText('Payment Successful!');
+      setTimeout(() => {
+        setIsVerifyingUPI(false);
+        setPendingPayments(prev => Array.isArray(prev) ? prev.filter(p => p !== paymentObj) : []);
+        setGlobalSales(prev => {
+          if (!prev) return { totalRevenue: parseFloat(paymentObj.amount) || 0, ordersToday: 1 };
+          return { ...prev, totalRevenue: (prev.totalRevenue || 0) + (parseFloat(paymentObj.amount) || 0), ordersToday: (prev.ordersToday || 0) + 1 };
+        });
+        setGlobalCustomers(prev => {
+          if (!prev) return [];
+          return prev.map(c => c.phone === paymentObj.customerPhone ? { ...c, points: (c.points || 0) + ((parseFloat(paymentObj.cashbackValue) || 0) * 10), visits: (c.visits || 0) + 1, lastVisit: 'Just now' } : c);
+        });
+        if (selectedTable === paymentObj.table) setSelectedTable(null);
+      }, 500);
+    }, 500);
   };
 
   const renderTableDetailsPanel = () => {
@@ -452,7 +441,7 @@ function StaffApp({ isBarMode = false, onBackToKDS, activeOrders, setActiveOrder
                     setPendingPayments(prev => Array.isArray(prev) ? prev.filter(p => p.table !== selectedTable) : []);
                     setSelectedTable(null);
                   }}>
-                    <i className="fa-solid fa-qrcode"></i> Paid (UPI/Card)
+                    <i className="fa-solid fa-credit-card"></i> Paid (Online/Card)
                   </button>
                 </div>
                 
